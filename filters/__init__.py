@@ -2,6 +2,7 @@ from .film import film
 from .greyscale import greyscale
 from .high_contrast import high_contrast
 from .purpleish import purpleish
+from .hue import hue
 
 # Dynamic selection dictionary by name
 FILTERS = {
@@ -9,6 +10,7 @@ FILTERS = {
     "greyscale": greyscale,
     "high-contrast": high_contrast,
     "purpleish": purpleish,
+    "hue": hue,
 }
 
 
