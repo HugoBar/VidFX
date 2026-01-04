@@ -13,7 +13,7 @@ def edit(
     output: Annotated[str, typer.Option()] = "video",
 ):
     """
-    Apply filters to a video.
+    Apply filters to a video and save the result in a new file.
 
     path: path to the input video
     filters: list of filters to apply
