@@ -2,6 +2,7 @@ import typer
 from typing_extensions import Annotated
 from moviepy import VideoFileClip
 from filters import apply_filters
+from effects import apply_effects
 
 app = typer.Typer()
 
@@ -10,6 +11,7 @@ app = typer.Typer()
 def edit(
     path: Annotated[str, typer.Argument()],
     filters: Annotated[str, typer.Option()] = "",
+    effects: Annotated[str, typer.Option()] = "",
     output: Annotated[str, typer.Option()] = "video",
 ):
     """
@@ -36,14 +38,21 @@ def edit(
         filter_queue = apply_filters(filter_list)
         processed_clip = clip.image_transform(filter_queue)
 
+    effects_list = effects.split(",")
+    print(f"You selected the {effects_list} effects!")
+
+    if not effects_list or effects_list == [""]:
+        print("No effects selected, continuing...")
+    else:
+        # Apply effects to video clip
+        effect_queue = apply_effects(effects_list)
+        processed_clip = processed_clip.transform(effect_queue, apply_to=["video"])
 
     # Save video result
-    filtered_clip.write_videofile(
+    processed_clip.write_videofile(
         f"{output}.mp4",
         codec="libx264",
-        audio_codec="aac",
-        temp_audiofile="temp-audio.m4a",
-        remove_temp=True,
+        audio=False,
         preset="medium",
         threads=4,
     )
