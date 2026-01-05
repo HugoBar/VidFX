@@ -4,9 +4,13 @@ import cv2  # OpenCV makes RGB ↔ HSV easy
 
 def hue(degrees=50):
     """
-    Returns a filter function that shifts the hue of an image.
+    Returns a filter function that shifts the hue of a frame.
 
-    degrees: how much to shift the hue (positive or negative)
+    Args:
+        degrees (int): Degrees to shift the hue (default: 50). Positive = clockwise, negative = counterclockwise.
+
+    Returns:
+        function: A filter function that takes a frame (numpy array) and returns the modified frame.
     """
 
     def apply(frame):

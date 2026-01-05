@@ -3,10 +3,14 @@ import numpy as np
 
 def greyscale(weights=(0.299, 0.587, 0.114), contrast_factor=1.3):
     """
-    Returns a filter function that converts frame to greyscale with optional contrast.
+    Returns a filter function that converts a frame to greyscale with adjustable contrast.
 
-    weights: RGB weights for calculating greyscale (default = standard luminance)
-    contrast_factor: how much to increase contrast (higher = stronger effect)
+    Args:
+        weights (tuple): RGB weights for luminance calculation (default: (0.299, 0.587, 0.114)).
+        contrast_factor (float): Factor to increase contrast (default: 1.3). Higher = stronger contrast.
+
+    Returns:
+        function: A filter function that takes a frame (numpy array) and returns the modified frame.
     """
 
     def apply(frame):

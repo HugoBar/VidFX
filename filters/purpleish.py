@@ -5,10 +5,14 @@ def purpleish(red_boost_blue=100, green_reduction=0.8, grey_red=40, grey_blue=30
     """
     Returns a filter function that tints blue and grey pixels toward purple.
 
-    red_boost_blue: how much red to add to bright blue pixels (higher = more purple)
-    green_reduction: factor to reduce green in blue pixels (0-1, lower = greener reduced more)
-    grey_red: how much red to add to grey/dark pixels
-    grey_blue: how much blue to add to grey/dark pixels
+    Args:
+        red_boost_blue (int): Amount of red to add to bright blue pixels (default: 100). Higher = more purple.
+        green_reduction (float): Factor to reduce green in blue pixels (default: 0.8). Lower = more reduction.
+        grey_red (int): Amount of red to add to grey/dark pixels (default: 40).
+        grey_blue (int): Amount of blue to add to grey/dark pixels (default: 30).
+
+    Returns:
+        function: A filter function that takes a frame (numpy array) and returns the modified frame.
     """
 
     def apply(frame):

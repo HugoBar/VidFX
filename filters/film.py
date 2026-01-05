@@ -3,11 +3,15 @@ import numpy as np
 
 def film(grain_std=10, warm=(1.4, 1.3, 0.95), sat_factor=1.2):
     """
-    Returns a filter function that adds grain and saturation.
+    Returns a filter function that adds film-like grain, warmth, and saturation to a frame.
 
-    grain_std: how strong the grain/noise is (higher = more grain)
-    warm: RGB multipliers to make the image warmer or cooler
-    sat_factor: how much to boost saturation (higher = more vivid colors)
+    Args:
+        grain_std (float): Standard deviation for grain/noise (default: 10). Higher = more grain.
+        warm (tuple): RGB multipliers for warmth adjustment (default: (1.4, 1.3, 0.95)).
+        sat_factor (float): Saturation boost factor (default: 1.2). Higher = more vivid colors.
+
+    Returns:
+        function: A filter function that takes a frame (numpy array) and returns the modified frame.
     """
 
     def apply(frame):

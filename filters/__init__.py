@@ -16,10 +16,13 @@ FILTERS = {
 
 def apply_filters(filter_names):
     """
-    Returns a single function that applies multiple filters in sequence to a
-    frame.
+    Returns a single function that applies multiple filters in sequence to a frame.
 
-    filter_names: list of strings, e.g., ["film", "greyscale"]
+    Args:
+        filter_names (list): List of filter names (strings), e.g., ["film", "greyscale"].
+
+    Returns:
+        function: A combined function that takes a frame (numpy array) and applies all filters.
     """
 
     filter_instances = [FILTERS[name]() for name in filter_names]
