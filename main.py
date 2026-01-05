@@ -24,13 +24,18 @@ def edit(
 
     # Create video object
     clip = VideoFileClip(path).subclipped(0, 5)
+    processed_clip = clip
 
     filter_list = filters.split(",")
-    print(f"You selected the {filter_list} filter!")
+    print(f"You selected the {filter_list} filters!")
 
-    # Apply filters to each frame of the video
-    filter_queue = apply_filters(filter_list)
-    filtered_clip = clip.image_transform(filter_queue)
+    if not filter_list or filter_list == [""]:
+        print("No filters selected, continuing...")
+    else:
+        # Apply filters to each frame of the video
+        filter_queue = apply_filters(filter_list)
+        processed_clip = clip.image_transform(filter_queue)
+
 
     # Save video result
     filtered_clip.write_videofile(
