@@ -3,8 +3,8 @@ Python CLI tool to create short video edits
 
 ## TO-DO
 
-- [ ] Add effects package ( with 2 base effects )
-- [ ] Add 'merge' command
+- [x] Add effects package ( with 2 base effects )
+- [x] Add 'merge' command
 - [ ] Add transition package ( with 1 base transtion )
 - [ ] Add command to add music to the video
 - [ ] Add parameterized filters and effects (contrast, zooming)
