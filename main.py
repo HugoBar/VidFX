@@ -8,6 +8,7 @@ various filters (e.g., greyscale, film) and effects (e.g., stop_motion, photo_mo
 import typer
 from typing_extensions import Annotated
 from moviepy import VideoFileClip
+import moviepy as mp
 from filters import apply_filters
 from effects import apply_effects
 
@@ -68,7 +69,42 @@ def edit(
         processed_clip = processed_clip.transform(effect_queue, apply_to=["video"])
 
     # Save video result
-    processed_clip.write_videofile(
+    save_video(processed_clip, output)
+
+
+@app.command()
+def merge(
+    paths: Annotated[list[str], typer.Argument()],
+    output: Annotated[str, typer.Option()] = "merged",
+):
+    """
+    Merge multiple video files into a single video.
+
+    Args:
+        paths (list[str]): List of paths to input video files.
+        output (str):      Base filename for the output merged video (default: "merged"). Saves as .mp4.
+
+    Example:
+        python main.py merge video1.mp4 video2.mp4 --output final_video
+    """
+
+    print(f"Merging videos: {paths}")
+
+    clips = [VideoFileClip(path) for path in paths]
+
+    concat_clip = mp.concatenate_videoclips(clips)
+    save_video(concat_clip, output)
+
+
+def save_video(clip, output):
+    """
+    Save the given video clip to a file.
+
+    Args:
+        clip (VideoFileClip): The video clip to save.
+        output (str):         Base filename for the output video. Saves as .mp4.
+    """
+    clip.write_videofile(
         f"{output}.mp4",
         codec="libx264",
         audio=False,
