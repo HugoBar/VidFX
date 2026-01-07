@@ -46,6 +46,16 @@ def edit(
 
     logger.info("Starting video editing process...")
 
+    # Validate input file path
+    logger.info("Validating input file path...")
+    isFile = os.path.isfile(path)
+    if not isFile:
+        logger.error(
+            f"The file {path} does not exist. Please provide a valid video file path."
+        )
+        raise typer.Exit(code=1)
+
+    logger.info("Input file path is valid.")
 
     # Create video object
     logger.info(f"Loading video from {path}...")
