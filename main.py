@@ -5,12 +5,14 @@ This module provides a command-line interface to edit videos by applying
 various filters (e.g., greyscale, film) and effects (e.g., stop_motion, photo_movement).
 """
 
+import os
 import typer
 from typing_extensions import Annotated
 from moviepy import VideoFileClip
 import moviepy as mp
 from filters import apply_filters
 from effects import apply_effects
+from logger import logger
 
 app = typer.Typer()
 
@@ -42,29 +44,35 @@ def edit(
         python main.py edit input.mp4 --filters greyscale --effects photo_movement --output edited
     """
 
-    print(f"Editing video: {path}")
+    logger.info("Starting video editing process...")
+
 
     # Create video object
+    logger.info(f"Loading video from {path}...")
     clip = VideoFileClip(path).subclipped(0, 5)
     processed_clip = clip
 
-    filter_list = filters.split(",")
-    print(f"You selected the {filter_list} filters!")
+    # --- FILTERS ---
 
+    filter_list = filters.split(",")
     if not filter_list or filter_list == [""]:
-        print("No filters selected, continuing...")
+        logger.info("No filters selected, continuing...")
     else:
-        # Apply filters to each frame of the video
+        logger.info(f"You selected the {filter_list} filters!")
+
+        # Attach filters to each frame of the video
         filter_queue = apply_filters(filter_list)
         processed_clip = clip.image_transform(filter_queue)
 
-    effects_list = effects.split(",")
-    print(f"You selected the {effects_list} effects!")
+    # --- EFFECTS ---
 
+    effects_list = effects.split(",")
     if not effects_list or effects_list == [""]:
-        print("No effects selected, continuing...")
+        logger.info("No effects selected, continuing...")
     else:
-        # Apply effects to video clip
+        logger.info(f"You selected the {effects_list} effects!")
+
+        # Attach effects to video clip
         effect_queue = apply_effects(effects_list)
         processed_clip = processed_clip.transform(effect_queue, apply_to=["video"])
 
@@ -88,7 +96,7 @@ def merge(
         python main.py merge video1.mp4 video2.mp4 --output final_video
     """
 
-    print(f"Merging videos: {paths}")
+    logger.info(f"Merging videos: {paths}")
 
     clips = [VideoFileClip(path) for path in paths]
 
