@@ -11,7 +11,7 @@ from typing_extensions import Annotated
 from moviepy import VideoFileClip
 import moviepy as mp
 from filters import apply_filters, validate_filters
-from effects import apply_effects
+from effects import apply_effects, validate_effects
 from logger import logger
 
 app = typer.Typer()
@@ -83,9 +83,15 @@ def edit(
     # --- EFFECTS ---
 
     effects_list = effects.split(",")
+
     if not effects_list or effects_list == [""]:
         logger.info("No effects selected, continuing...")
     else:
+        try:
+            validate_effects(effects_list)
+        except ValueError as e:
+            logger.error(str(e))
+            raise typer.Exit(code=1)
         logger.info(f"You selected the {effects_list} effects!")
 
         # Attach effects to video clip
