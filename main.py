@@ -72,7 +72,7 @@ def edit(
         try:
             validate_filters(filter_list)
         except ValueError as e:
-            typer.echo(f"Error: {str(e)}", err=True)
+            logger.error(str(e))
             raise typer.Exit(code=1)
         logger.info(f"You selected the {filter_list} filters!")
 
