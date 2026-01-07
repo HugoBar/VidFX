@@ -3,7 +3,6 @@ from .greyscale import greyscale
 from .high_contrast import high_contrast
 from .purpleish import purpleish
 from .hue import hue
-from logger import logger
 
 # Dynamic selection dictionary by name
 FILTERS = {
