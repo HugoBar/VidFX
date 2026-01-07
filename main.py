@@ -10,7 +10,7 @@ import typer
 from typing_extensions import Annotated
 from moviepy import VideoFileClip
 import moviepy as mp
-from filters import apply_filters
+from filters import apply_filters, validate_filters
 from effects import apply_effects
 from logger import logger
 
@@ -58,16 +58,22 @@ def edit(
     logger.info("Input file path is valid.")
 
     # Create video object
-    logger.info(f"Loading video from {path}...")
+    logger.info(f"Loading video from {path}...\n")
     clip = VideoFileClip(path).subclipped(0, 5)
     processed_clip = clip
 
     # --- FILTERS ---
 
     filter_list = filters.split(",")
+
     if not filter_list or filter_list == [""]:
         logger.info("No filters selected, continuing...")
     else:
+        try:
+            validate_filters(filter_list)
+        except ValueError as e:
+            typer.echo(f"Error: {str(e)}", err=True)
+            raise typer.Exit(code=1)
         logger.info(f"You selected the {filter_list} filters!")
 
         # Attach filters to each frame of the video
