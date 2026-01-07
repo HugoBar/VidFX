@@ -10,30 +10,61 @@ import typer
 from typing_extensions import Annotated
 from moviepy import VideoFileClip
 import moviepy as mp
-from filters import apply_filters, validate_filters
-from effects import apply_effects, validate_effects
+from filters import apply_filters, validate_filters, FILTERS
+from effects import apply_effects, validate_effects, EFFECTS
 from logger import logger
 
 app = typer.Typer()
 
 
-@app.command()
+@app.command(help="Apply filters and effects to a video.")
 def edit(
-    path: Annotated[str, typer.Argument()],
-    filters: Annotated[str, typer.Option()] = "",
-    effects: Annotated[str, typer.Option()] = "",
-    output: Annotated[str, typer.Option()] = "video",
+    path: Annotated[str, typer.Argument(help="Path to the input video file. (.mp4)")],
+    filters: Annotated[
+        str,
+        typer.Option(
+            help="Comma-separated list of filters to apply. Use --list-filters to see available filters."
+        ),
+    ] = "",
+    effects: Annotated[
+        str,
+        typer.Option(
+            help="Comma-separated list of effects to apply. Use --list-effects to see available effects."
+        ),
+    ] = "",
+    list_filters: Annotated[
+        bool,
+        typer.Option(
+            help="List all available filters and exit the program immediately.",
+            is_flag=True,
+        ),
+    ] = False,
+    list_effects: Annotated[
+        bool,
+        typer.Option(
+            help="List all available effects and exit the program immediately.",
+            is_flag=True,
+        ),
+    ] = False,
+    output: Annotated[
+        str,
+        typer.Option(
+            help="Base filename for the output video. Will be saved as <output>.mp4 in the current directory."
+        ),
+    ] = "video",
 ):
     """
     Apply filters and effects to a video and save the result in a new file.
 
     Args:
-        path (str):     Path to the input video file.
-        filters (str):  Comma-separated list of filters to apply (e.g., "greyscale,film").
-                        Available filters: greyscale, film, high_contrast, hue, purpleish.
-        effects (str):  Comma-separated list of effects to apply (e.g., "stop_motion,photo_movement").
-                        Available effects: stop_motion, photo_movement.
-        output (str):   Base filename for the output video (default: "video"). Saves as .mp4.
+        path (str):             Path to the input video file.
+        filters (str):          Comma-separated list of filters to apply (e.g., "greyscale,film").
+                                Available filters: greyscale, film, high_contrast, hue, purpleish.
+        effects (str):          Comma-separated list of effects to apply (e.g., "stop_motion,photo_movement").
+                                Available effects: stop_motion, photo_movement.
+        list_filters (bool):    If set, lists all available filters and exits.
+        list_effects (bool):    If set, lists all available effects and exits.
+        output (str):           Base filename for the output video (default: "video"). Saves as .mp4.
 
     Note:
         - The video is subclipped to the first 5 seconds for processing.
@@ -42,7 +73,17 @@ def edit(
 
     Example:
         python main.py edit input.mp4 --filters greyscale --effects photo_movement --output edited
+        python main.py edit input.mp4 --filters film
+        python main.py edit input.mp4 --effects stop_motion
     """
+
+    if list_filters:
+        logger.info(", ".join(FILTERS))
+        raise typer.Exit()
+
+    if list_effects:
+        logger.info(", ".join(EFFECTS))
+        raise typer.Exit()
 
     logger.info("Starting video editing process...")
 
@@ -102,20 +143,31 @@ def edit(
     save_video(processed_clip, output)
 
 
-@app.command()
+@app.command(help="Merge multiple video files into a single video.")
 def merge(
-    paths: Annotated[list[str], typer.Argument()],
-    output: Annotated[str, typer.Option()] = "merged",
+    paths: Annotated[
+        list[str],
+        typer.Argument(
+            help="Paths to input video files. You can specify two or more video files to merge."
+        ),
+    ],
+    output: Annotated[
+        str,
+        typer.Option(
+            help="Base filename for the output video. Will be saved as <output>.mp4 in the current directory."
+        ),
+    ] = "merged",
 ):
     """
     Merge multiple video files into a single video.
 
     Args:
-        paths (list[str]): List of paths to input video files.
-        output (str):      Base filename for the output merged video (default: "merged"). Saves as .mp4.
+        paths (list[str]):  List of paths to input video files.
+        output (str):       Base filename for the output merged video (default: "merged"). Saves as .mp4.
 
     Example:
-        python main.py merge video1.mp4 video2.mp4 --output final_video
+        python main.py merge video1.mp4 video2.mp4
+        python main.py merge clip1.mp4 clip2.mp4 clip3.mp4 --output final_video
     """
 
     logger.info(f"Merging videos: {paths}")
