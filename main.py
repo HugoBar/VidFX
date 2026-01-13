@@ -12,6 +12,7 @@ from moviepy import VideoFileClip
 import moviepy as mp
 from filters import apply_filters, validate_filters, FILTERS
 from effects import apply_effects, validate_effects, EFFECTS
+from transitions import resolve_transitions
 from logger import logger
 
 app = typer.Typer()
@@ -139,7 +140,7 @@ def edit(
         effect_queue = apply_effects(effects_list)
         processed_clip = processed_clip.transform(effect_queue, apply_to=["video"])
 
-    # Save video result
+    # --- SAVE VIDEO ---
     save_video(processed_clip, output)
 
 
@@ -151,6 +152,12 @@ def merge(
             help="Paths to input video files. You can specify two or more video files to merge."
         ),
     ],
+    transitions: Annotated[
+        list[str],
+        typer.Option(
+            help="Comma-separated list of transitions to apply between videos. Use --list-transitions to see available transitions."
+        ),
+    ] = [],
     output: Annotated[
         str,
         typer.Option(
@@ -162,19 +169,30 @@ def merge(
     Merge multiple video files into a single video.
 
     Args:
-        paths (list[str]):  List of paths to input video files.
-        output (str):       Base filename for the output merged video (default: "merged"). Saves as .mp4.
+        paths (list[str]):       List of paths to input video files.
+        transitions (list[str]): List of transitions to apply between videos (default: none).
+        output (str):            Base filename for the output merged video (default: "merged"). Saved as <output>.mp4.
 
     Example:
         python main.py merge video1.mp4 video2.mp4
         python main.py merge clip1.mp4 clip2.mp4 clip3.mp4 --output final_video
+        python main.py merge clip1.mp4 clip2.mp4 --transitions three_blocks --transitions crossfade --output final_video
     """
-
     logger.info(f"Merging videos: {paths}")
 
     clips = [VideoFileClip(path) for path in paths]
 
+    # --- TRANSITIONS ---
+    transition_classes = resolve_transitions(transitions)
+
+    for i in range(len(clips) - 1):
+        clips[i] = clips[i].with_effects(
+            [transition_classes[i](transition_to=clips[i + 1])]
+        )
+
     concat_clip = mp.concatenate_videoclips(clips)
+
+    # --- SAVE VIDEO ---
     save_video(concat_clip, output)
 
 
