@@ -8,7 +8,7 @@ from .hue import hue
 FILTERS = {
     "film": film,
     "greyscale": greyscale,
-    "high-contrast": high_contrast,
+    "high_contrast": high_contrast,
     "purpleish": purpleish,
     "hue": hue,
 }
