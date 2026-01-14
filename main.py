@@ -183,12 +183,22 @@ def merge(
     clips = [VideoFileClip(path) for path in paths]
 
     # --- TRANSITIONS ---
-    transition_classes = resolve_transitions(transitions)
+    try:
+        transition_classes = resolve_transitions(transitions)
+    except ValueError as e:
+        logger.error(str(e))
+        raise typer.Exit(code=1)
 
-    for i in range(len(clips) - 1):
-        clips[i] = clips[i].with_effects(
-            [transition_classes[i](transition_to=clips[i + 1])]
-        )
+    if transition_classes:
+        logger.info(f"You selected the {transitions} transitions!")
+
+        # Attach transitions to each clip (except the last one)
+        for i in range(len(clips) - 1):
+            clips[i] = clips[i].with_effects(
+                [transition_classes[i](transition_to=clips[i + 1])]
+            )
+    else:
+        logger.info("No transitions selected, continuing...")
 
     concat_clip = mp.concatenate_videoclips(clips)
 

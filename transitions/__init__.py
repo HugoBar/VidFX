@@ -24,7 +24,7 @@ def resolve_transitions(transition_names):
 
     invalid = [name for name in transition_names if name not in valid_transitions]
     if invalid:
-        raise ValueError(
-            f"Invalid transitions: {', '.join(invalid)}. Valid transitions are: {', '.join(valid_transitions)}"
-        )
+        error_message = f"Invalid transitions: {', '.join(invalid)}. Valid transitions are: {', '.join(valid_transitions)}"
+        raise ValueError(error_message)
+
     return [TRANSITION_REGISTRY[name] for name in transition_names]
