@@ -28,3 +28,25 @@ def resolve_transitions(transition_names):
         raise ValueError(error_message)
 
     return [TRANSITION_REGISTRY[name] for name in transition_names]
+
+
+def resolve_transition(transition_name):
+    """
+    Resolves a single transition name to its corresponding class.
+
+    Args:
+        transition_name (str): The name of the transition, e.g., "three_blocks".
+
+    Returns:
+        class: The transition class corresponding to the provided name.
+
+    Raises:
+        ValueError: If the transition name is invalid.
+    """
+    valid_transitions = set(TRANSITION_REGISTRY.keys())
+
+    if transition_name not in valid_transitions:
+        error_message = f"Invalid transition: {transition_name}. Valid transitions are: {', '.join(valid_transitions)}"
+        raise ValueError(error_message)
+
+    return TRANSITION_REGISTRY[transition_name]

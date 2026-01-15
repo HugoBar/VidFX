@@ -12,7 +12,7 @@ from moviepy import VideoFileClip
 import moviepy as mp
 from filters import apply_filters, validate_filters, FILTERS
 from effects import apply_effects, validate_effects, EFFECTS
-from transitions import resolve_transitions
+from transitions import resolve_transition
 from logger import logger
 
 app = typer.Typer()
@@ -183,7 +183,6 @@ def merge(
     clips = [VideoFileClip(path) for path in paths]
 
     # --- TRANSITIONS ---
-    # TODO : handle case where number of transitions != number of clips - 1
     used_transition_slots = []
     for transition in transitions:
         if "@" not in transition or not transition.split("@")[1]:
@@ -214,10 +213,12 @@ def merge(
         used_transition_slots.append(clip_position)
 
     indexed_transitions = [tuple(transition.split("@")) for transition in transitions]
-    print(indexed_transitions)
 
     try:
-        transition_classes = resolve_transitions(transitions)
+        transition_classes = [
+            (resolve_transition(transition), int(i) - 1)
+            for transition, i in indexed_transitions
+        ]
     except ValueError as e:
         logger.error(str(e))
         raise typer.Exit(code=1)
@@ -225,12 +226,12 @@ def merge(
     if transition_classes:
         logger.info(f"You selected the {transitions} transitions!")
 
-        # Attach transitions to each clip (except the last one)
-        for i in range(len(clips) - 1):
-            clips[i] = clips[i].with_effects(
-                [transition_classes[i](transition_to=clips[i + 1])]
-            )
-    else:
+        # Attach transitions to each clip at specified index
+        for tc, idx in transition_classes:
+            clips[idx] = clips[idx].with_effects([tc(transition_to=clips[idx + 1])])
+
+    # If no transitions were specified, just concatenate the clips
+    elif not transition_classes:
         logger.info("No transitions selected, continuing...")
 
     concat_clip = mp.concatenate_videoclips(clips)
