@@ -1,5 +1,5 @@
 import numpy as np
-import cv2  # OpenCV makes RGB ↔ HSV easy
+import cv2  # OpenCV simplifies RGB ↔ HSV conversions
 
 
 def hue(degrees=50):
@@ -14,13 +14,13 @@ def hue(degrees=50):
     """
 
     def apply(frame):
-        # Convert RGB to HSV (OpenCV uses BGR by default, so swap channels)
+        # Convert RGB to HSV for easy hue manipulation (OpenCV uses BGR by default)
         hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV).astype(np.float32)
 
         # Shift hue (OpenCV hue range: 0-179)
         hsv[..., 0] = (hsv[..., 0] + (degrees / 360.0) * 180) % 180
 
-        # Convert back to uint8 and RGB
+        # Convert back to RGB uint8
         hsv = hsv.astype(np.uint8)
         rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
         return rgb

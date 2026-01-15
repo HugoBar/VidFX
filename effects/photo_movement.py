@@ -21,9 +21,12 @@ def photo_movement(duplicate_every=4):
         frame = get_frame(t)
         frame_index = int(t * get_frame.__self__.fps)
 
+        # If we are in a duplication window, return the previous frame
         if duplicate_count > 0:
             duplicate_count -= 1
             return previous_frame
+
+        # Trigger duplication every (duplicate_every + 1) frames
         if frame_index % (duplicate_every + 1) == 0:
             previous_frame = frame
             duplicate_count = duplicate_every

@@ -6,8 +6,8 @@ def film(grain_std=10, warm=(1.4, 1.3, 0.95), sat_factor=1.2):
     Returns a filter function that adds film-like grain, warmth, and saturation to a frame.
 
     Args:
-        grain_std (float): Standard deviation for grain/noise (default: 10). Higher = more grain.
-        warm (tuple): RGB multipliers for warmth adjustment (default: (1.4, 1.3, 0.95)).
+        grain_std (float):  Standard deviation for grain/noise (default: 10). Higher = more grain.
+        warm (tuple):       RGB multipliers for warmth adjustment (default: (1.4, 1.3, 0.95)).
         sat_factor (float): Saturation boost factor (default: 1.2). Higher = more vivid colors.
 
     Returns:
@@ -15,20 +15,21 @@ def film(grain_std=10, warm=(1.4, 1.3, 0.95), sat_factor=1.2):
     """
 
     def apply(frame):
-        # Add film grain
+        # Add random film grain
         grain = np.random.normal(0, grain_std, frame[..., :3].shape)
         frame = frame + grain
 
-        # Warm color grading
-        frame[..., 0] *= warm[0]  # red
-        frame[..., 1] *= warm[1]  # green
-        frame[..., 2] *= warm[2]  # blue
+        # Warm color grading by multiplying RGB channels
+        frame[..., 0] *= warm[0]  # Red channel
+        frame[..., 1] *= warm[1]  # Green channel
+        frame[..., 2] *= warm[2]  # Blue channel
 
         # Increase saturation
-        gray = np.dot(frame[..., :3], [0.299, 0.587, 0.114])[..., None]  # luminance
+        # Compute luminance to preserve brightness
+        gray = np.dot(frame[..., :3], [0.299, 0.587, 0.114])[..., None]
         frame = gray + (frame - gray) * sat_factor
 
-        # Clip and convert to uint8
+        # Clip values to 0-255 and convert to uint8
         frame = np.clip(frame, 0, 255).astype(np.uint8)
         return frame
 

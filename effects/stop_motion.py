@@ -14,7 +14,6 @@ def stop_motion(remove_every=2):
     Returns:
         function: A transform function suitable for clip.transform().
     """
-
     previous_frame = None
 
     def apply(get_frame, t):
@@ -23,11 +22,14 @@ def stop_motion(remove_every=2):
         frame = get_frame(t)
         frame_index = int(t * get_frame.__self__.fps)
 
+        # Replace frame at every remove_every interval
         if frame_index % remove_every == 0:
             if previous_frame is not None:
                 return previous_frame
             else:
                 return frame
+
+        # Store the current frame for the next replacement
         previous_frame = frame
         return frame
 

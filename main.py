@@ -2,7 +2,8 @@
 VidFX: A CLI tool for applying video filters and effects using MoviePy.
 
 This module provides a command-line interface to edit videos by applying
-various filters (e.g., greyscale, film) and effects (e.g., stop_motion, photo_movement).
+various filters (e.g., greyscale, film) and effects (e.g., stop_motion, photo_movement),
+and to merge multiple videos with optional transitions.
 """
 
 import os
@@ -10,8 +11,8 @@ import typer
 from typing_extensions import Annotated
 from moviepy import VideoFileClip
 import moviepy as mp
-from filters import apply_filters, validate_filters, FILTERS
-from effects import apply_effects, validate_effects, EFFECTS
+from filters import apply_filters, validate_filters, FILTER_REGISTRY
+from effects import apply_effects, validate_effects, EFFECTS_REGISTRY
 from transitions import resolve_transition, TRANSITION_REGISTRY
 from logger import logger
 
@@ -78,20 +79,21 @@ def edit(
         python main.py edit input.mp4 --effects stop_motion
     """
 
+    # If requested, list available filters and exit
     if list_filters:
-        logger.info(", ".join(FILTERS))
+        logger.info(", ".join(FILTER_REGISTRY))
         raise typer.Exit()
 
+    # If requested, list available effects and exit
     if list_effects:
-        logger.info(", ".join(EFFECTS))
+        logger.info(", ".join(EFFECTS_REGISTRY))
         raise typer.Exit()
 
     logger.info("Starting video editing process...")
 
-    # Validate input file path
+    # Validate input file path exists
     logger.info("Validating input file path...")
-    isFile = os.path.isfile(path)
-    if not isFile:
+    if not os.path.isfile(path):
         logger.error(
             f"The file {path} does not exist. Please provide a valid video file path."
         )
@@ -99,7 +101,7 @@ def edit(
 
     logger.info("Input file path is valid.")
 
-    # Create video object
+    # Load the video and subclip first 5 seconds for processing
     logger.info(f"Loading video from {path}...\n")
     clip = VideoFileClip(path).subclipped(0, 5)
     processed_clip = clip
@@ -108,17 +110,19 @@ def edit(
 
     filter_list = filters.split(",")
 
+    # Skip filters if none specified
     if not filter_list or filter_list == [""]:
         logger.info("No filters selected, continuing...")
     else:
         try:
+            # Validate that all requested filters exist
             validate_filters(filter_list)
         except ValueError as e:
             logger.error(str(e))
             raise typer.Exit(code=1)
         logger.info(f"You selected the {filter_list} filters!")
 
-        # Attach filters to each frame of the video
+        # Apply filters to each frame of the video
         filter_queue = apply_filters(filter_list)
         processed_clip = clip.image_transform(filter_queue)
 
@@ -126,17 +130,19 @@ def edit(
 
     effects_list = effects.split(",")
 
+    # Skip effects if none specified
     if not effects_list or effects_list == [""]:
         logger.info("No effects selected, continuing...")
     else:
         try:
+            # Validate that all requested effects exist
             validate_effects(effects_list)
         except ValueError as e:
             logger.error(str(e))
             raise typer.Exit(code=1)
         logger.info(f"You selected the {effects_list} effects!")
 
-        # Attach effects to video clip
+        # Apply effects to the video clip
         effect_queue = apply_effects(effects_list)
         processed_clip = processed_clip.transform(effect_queue, apply_to=["video"])
 
@@ -191,25 +197,32 @@ def merge(
         python main.py merge clip1.mp4 clip2.mp4 clip3.mp4 --output final_video
         python main.py merge clip1.mp4 clip2.mp4 --transitions crossfade@2 --output final_video
     """
+    # List available transitions and exit if requested
     if list_transitions:
         logger.info(", ".join(TRANSITION_REGISTRY.keys()))
         raise typer.Exit()
 
     logger.info(f"Merging videos: {paths}")
 
+    # Load all clips
     clips = [VideoFileClip(path) for path in paths]
 
     # --- TRANSITIONS ---
+
+    # Validate all transition syntax and clip numbers
     try:
         validate_indexes(transitions, len(clips))
     except ValueError as e:
         logger.error(str(e))
         raise typer.Exit(code=1)
 
-    # Build a list of tuples pairing transition name and clip number
+    # Build list of (transition_name, clip_number) tuples
     indexed_transitions = [tuple(transition.split("@")) for transition in transitions]
 
     try:
+        # Resolve transitions to their classes
+        # Pair each resolved transition with the clip index
+        # Note: clip indexes are zero-based internally, so we subtract 1 from user-provided clip numbers
         transition_classes = [
             (resolve_transition(transition), int(i) - 1)
             for transition, i in indexed_transitions
@@ -221,11 +234,11 @@ def merge(
     if transition_classes:
         logger.info(f"You selected the {transitions} transitions!")
 
-        # Attach transitions to each clip at specified index
+        # Apply each transition at the specified clip position
         for tc, idx in transition_classes:
             clips[idx] = clips[idx].with_effects([tc(transition_to=clips[idx + 1])])
 
-    # If no transitions were specified, just concatenate the clips
+    # If no transitions, just concatenate clips directly
     elif not transition_classes:
         logger.info("No transitions selected, continuing...")
 
@@ -244,6 +257,7 @@ def save_video(clip, output):
         clip (VideoFileClip): The video clip to save.
         output (str):         Base filename for the output video. Saves as .mp4.
     """
+    # Save the video using H.264 codec, no audio, medium preset, 4 threads
     clip.write_videofile(
         f"{output}.mp4",
         codec="libx264",
@@ -255,19 +269,20 @@ def save_video(clip, output):
 
 def validate_indexes(transitions_list, max_length):
     """
-    Validate indexes in transitions.
+    Validate clip numbers in transitions to ensure correct usage.
 
     Args:
         transitions_list (list): List of transitions in the format <name>@<clip_number>.
+        max_length (int):        Number of clips being merged.
     Raises:
-        ValueError: If any transition name is invalid.
+        ValueError: If any index is invalid or duplicate.
     """
     used_transition_slots = []
 
     for transition in transitions_list:
         # Check that the transition contains a clip number (the "@N" syntax)
         if "@" not in transition or not transition.split("@")[1]:
-            error_message = f"Transition is missing an index: {transition}. Use the format <transition_name>@<index>."
+            error_message = f"Transition is missing a clip number: {transition}. Use <transition_name>@<clip_number>."
             raise ValueError(error_message)
 
         # Split transition into name and starting clip number
@@ -275,19 +290,19 @@ def validate_indexes(transitions_list, max_length):
 
         # Ensure the clip number is numeric
         if not clip_position.isdigit():
-            error_message = f"Transition index must be a number: {transition}"
+            error_message = f"Transition clip number must be a number: {transition}"
             raise ValueError(error_message)
 
         clip_position = int(clip_position)
 
         # Check that the clip number is within valid bounds (1-based)
         if not (1 <= clip_position < max_length):
-            error_message = f"Transition index {clip_position} is out of bounds for {max_length} clips. Valid indices are from 1 to {max_length - 1}."
+            error_message = f"Transition clip number {clip_position} is out of bounds for {max_length} clips. Valid clip numbers are from 1 to {max_length - 1}."
             raise ValueError(error_message)
 
         # Ensure no duplicate clip numbers (each transition can only be applied once per clip)
         if clip_position in used_transition_slots:
-            error_message = f"Transition index {clip_position} is already used. You can only use each index once."
+            error_message = f"Transition clip number {clip_position} is already used. You can only use each clip number once."
             raise ValueError(error_message)
 
         # Track the used clip numbers

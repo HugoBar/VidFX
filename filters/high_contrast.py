@@ -13,13 +13,15 @@ def high_contrast(contrast_factor=1.5):
     """
 
     def apply(frame):
-        # convert to float for calculations
+        # Convert to float for precise calculations
         out = frame.copy().astype(np.float32)
 
+        # Normalize RGB to 0-1, apply contrast around midpoint 0.5
         rgb = out[..., :3] / 255.0
         rgb = 0.5 + (rgb - 0.5) * contrast_factor
-        out[..., :3] = np.clip(rgb * 255, 0, 255)
 
+        # Scale back to 0-255, clip, and convert to uint8
+        out[..., :3] = np.clip(rgb * 255, 0, 255)
         return out.astype(np.uint8)
 
     return apply
