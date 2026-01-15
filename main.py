@@ -12,7 +12,7 @@ from moviepy import VideoFileClip
 import moviepy as mp
 from filters import apply_filters, validate_filters, FILTERS
 from effects import apply_effects, validate_effects, EFFECTS
-from transitions import resolve_transition
+from transitions import resolve_transition, TRANSITION_REGISTRY
 from logger import logger
 
 app = typer.Typer()
@@ -164,6 +164,13 @@ def merge(
             help="Base filename for the output video. Will be saved as <output>.mp4 in the current directory."
         ),
     ] = "merged",
+    list_transitions: Annotated[
+        bool,
+        typer.Option(
+            help="List all available transitions and exit the program immediately.",
+            is_flag=True,
+        ),
+    ] = False,
 ):
     """
     Merge multiple video files into a single video.
@@ -178,6 +185,10 @@ def merge(
         python main.py merge clip1.mp4 clip2.mp4 clip3.mp4 --output final_video
         python main.py merge clip1.mp4 clip2.mp4 --transitions three_blocks --transitions crossfade --output final_video
     """
+    if list_transitions:
+        logger.info(", ".join(TRANSITION_REGISTRY.keys()))
+        raise typer.Exit()
+
     logger.info(f"Merging videos: {paths}")
 
     clips = [VideoFileClip(path) for path in paths]
