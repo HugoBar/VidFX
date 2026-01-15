@@ -58,21 +58,21 @@ def edit(
     Apply filters and effects to a video and save the result in a new file.
 
     Args:
-        path (str):             Path to the input video file.
-        filters (str):          Comma-separated list of filters to apply (e.g., "greyscale,film").
-                                Available filters: greyscale, film, high_contrast, hue, purpleish.
-        effects (str):          Comma-separated list of effects to apply (e.g., "stop_motion,photo_movement").
-                                Available effects: stop_motion, photo_movement.
-        list_filters (bool):    If set, lists all available filters and exits.
-        list_effects (bool):    If set, lists all available effects and exits.
-        output (str):           Base filename for the output video (default: "video"). Saves as .mp4.
+        path (str):                       Path to the input video file.
+        filters (str, optional):          Comma-separated list of filters to apply (e.g., "greyscale,film").
+                                          Available filters: greyscale, film, high_contrast, hue, purpleish.
+        effects (str, optional):          Comma-separated list of effects to apply (e.g., "stop_motion,photo_movement").
+                                          Available effects: stop_motion, photo_movement.
+        list_filters (bool, optional):    If set, lists all available filters and exits.
+        list_effects (bool, optional):    If set, lists all available effects and exits.
+        output (str, optional):           Base filename for the output video (default: "video"). Saves as .mp4.
 
     Note:
         - The video is subclipped to the first 5 seconds for processing.
         - Filters are applied per-frame, effects are applied as clip transforms.
         - Requires MoviePy and the filters/effects modules.
 
-    Example:
+    Example usage:
         python main.py edit input.mp4 --filters greyscale --effects photo_movement --output edited
         python main.py edit input.mp4 --filters film
         python main.py edit input.mp4 --effects stop_motion
