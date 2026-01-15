@@ -183,6 +183,39 @@ def merge(
     clips = [VideoFileClip(path) for path in paths]
 
     # --- TRANSITIONS ---
+    # TODO : handle case where number of transitions != number of clips - 1
+    used_transition_slots = []
+    for transition in transitions:
+        if "@" not in transition or not transition.split("@")[1]:
+            logger.error(
+                f"Transition is missing an index: {transition}. Use the format <transition_name>@<index>."
+            )
+            raise typer.Exit(code=1)
+
+        _, clip_position = transition.split("@")
+
+        if not clip_position.isdigit():
+            logger.error(f"Transition index must be a number: {transition}")
+            raise typer.Exit(code=1)
+
+        clip_position = int(clip_position)
+
+        if not (1 <= clip_position < len(clips)):
+            logger.error(
+                f"Transition index {clip_position} is out of bounds for {len(clips)} clips. Valid indices are from 1 to {len(clips) - 1}."
+            )
+            raise typer.Exit(code=1)
+        if clip_position in used_transition_slots:
+            logger.error(
+                f"Transition index {clip_position} is already used. You can only use each index once."
+            )
+            raise typer.Exit(code=1)
+
+        used_transition_slots.append(clip_position)
+
+    indexed_transitions = [tuple(transition.split("@")) for transition in transitions]
+    print(indexed_transitions)
+
     try:
         transition_classes = resolve_transitions(transitions)
     except ValueError as e:
