@@ -155,7 +155,7 @@ def merge(
     transitions: Annotated[
         list[str],
         typer.Option(
-            help="Comma-separated list of transitions to apply between videos. Use --list-transitions to see available transitions."
+            help="List of transitions to apply between videos in the format <name>@<clip_number>. Use --list-transitions to see available transitions."
         ),
     ] = [],
     output: Annotated[
@@ -173,17 +173,23 @@ def merge(
     ] = False,
 ):
     """
-    Merge multiple video files into a single video.
+    Merge multiple video files into a single video, optionally applying transitions
+    between clips.
 
     Args:
-        paths (list[str]):       List of paths to input video files.
-        transitions (list[str]): List of transitions to apply between videos (default: none).
-        output (str):            Base filename for the output merged video (default: "merged"). Saved as <output>.mp4.
+        paths (list[str]):                     Paths to input video files. Provide two or more video files to merge.
+        transitions (list[str], optional):     List of transitions to apply between videos. Each transition must
+                                               specify the clip it starts at using the format <transition_name>@<clip_number>,
+                                               where <clip_number> is **1-based** and indicates the clip from which the
+                                               transition begins. Default is no transitions.
+        output (str, optional):                Base filename for the output video (default: "video"). Saves as .mp4.
+        list_transitions (bool, optional):     If set, lists all available transitions and exits.
 
-    Example:
+
+    Example usage:
         python main.py merge video1.mp4 video2.mp4
         python main.py merge clip1.mp4 clip2.mp4 clip3.mp4 --output final_video
-        python main.py merge clip1.mp4 clip2.mp4 --transitions three_blocks --transitions crossfade --output final_video
+        python main.py merge clip1.mp4 clip2.mp4 --transitions crossfade@2 --output final_video
     """
     if list_transitions:
         logger.info(", ".join(TRANSITION_REGISTRY.keys()))
@@ -194,35 +200,13 @@ def merge(
     clips = [VideoFileClip(path) for path in paths]
 
     # --- TRANSITIONS ---
-    used_transition_slots = []
-    for transition in transitions:
-        if "@" not in transition or not transition.split("@")[1]:
-            logger.error(
-                f"Transition is missing an index: {transition}. Use the format <transition_name>@<index>."
-            )
-            raise typer.Exit(code=1)
+    try:
+        validate_indexes(transitions, len(clips))
+    except ValueError as e:
+        logger.error(str(e))
+        raise typer.Exit(code=1)
 
-        _, clip_position = transition.split("@")
-
-        if not clip_position.isdigit():
-            logger.error(f"Transition index must be a number: {transition}")
-            raise typer.Exit(code=1)
-
-        clip_position = int(clip_position)
-
-        if not (1 <= clip_position < len(clips)):
-            logger.error(
-                f"Transition index {clip_position} is out of bounds for {len(clips)} clips. Valid indices are from 1 to {len(clips) - 1}."
-            )
-            raise typer.Exit(code=1)
-        if clip_position in used_transition_slots:
-            logger.error(
-                f"Transition index {clip_position} is already used. You can only use each index once."
-            )
-            raise typer.Exit(code=1)
-
-        used_transition_slots.append(clip_position)
-
+    # Build a list of tuples pairing transition name and clip number
     indexed_transitions = [tuple(transition.split("@")) for transition in transitions]
 
     try:
@@ -245,6 +229,7 @@ def merge(
     elif not transition_classes:
         logger.info("No transitions selected, continuing...")
 
+    # --- CONCATENATE CLIPS ---
     concat_clip = mp.concatenate_videoclips(clips)
 
     # --- SAVE VIDEO ---
@@ -266,6 +251,47 @@ def save_video(clip, output):
         preset="medium",
         threads=4,
     )
+
+
+def validate_indexes(transitions_list, max_length):
+    """
+    Validate indexes in transitions.
+
+    Args:
+        transitions_list (list): List of transitions in the format <name>@<clip_number>.
+    Raises:
+        ValueError: If any transition name is invalid.
+    """
+    used_transition_slots = []
+
+    for transition in transitions_list:
+        # Check that the transition contains a clip number (the "@N" syntax)
+        if "@" not in transition or not transition.split("@")[1]:
+            error_message = f"Transition is missing an index: {transition}. Use the format <transition_name>@<index>."
+            raise ValueError(error_message)
+
+        # Split transition into name and starting clip number
+        _, clip_position = transition.split("@")
+
+        # Ensure the clip number is numeric
+        if not clip_position.isdigit():
+            error_message = f"Transition index must be a number: {transition}"
+            raise ValueError(error_message)
+
+        clip_position = int(clip_position)
+
+        # Check that the clip number is within valid bounds (1-based)
+        if not (1 <= clip_position < max_length):
+            error_message = f"Transition index {clip_position} is out of bounds for {max_length} clips. Valid indices are from 1 to {max_length - 1}."
+            raise ValueError(error_message)
+
+        # Ensure no duplicate clip numbers (each transition can only be applied once per clip)
+        if clip_position in used_transition_slots:
+            error_message = f"Transition index {clip_position} is already used. You can only use each index once."
+            raise ValueError(error_message)
+
+        # Track the used clip numbers
+        used_transition_slots.append(clip_position)
 
 
 if __name__ == "__main__":

@@ -10,3 +10,4 @@ Python CLI tool to create short video edits
 - [ ] Add parameterized filters and effects (contrast, zooming)
 - [ ] Batch editing ( add filters, effects and transtions, merge and music in only one command )
 - [ ] Add synchronize effects and transitions to the music beat
+- [ ] Add --autofill flag to merge - autofills transitions with no index
