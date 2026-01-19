@@ -19,11 +19,17 @@ VidFX is a Python command-line tool for applying filters, effects, and transitio
 
 ### Steps
 1. Clone the repository:
+
+    ```
     git clone https://github.com/HugoBar/VidFX.git
     cd VidFX
+    ```
 
-2. Install dependencies using pip (or another Python package manager):
-    pip install -r requirements.txt
+3. Install dependencies using pip (or another Python package manager):
+
+   ```
+   pip install -r requirements.txt
+   ``` 
 
 > The `requirements.txt` file lists all the necessary Python libraries for VidFX.  
 
