@@ -14,12 +14,15 @@ def photo_movement(duplicate_every=4):
     """
     previous_frame = None
     duplicate_count = 0
+    last_index = -1
 
     def apply(get_frame, t):
-        nonlocal previous_frame, duplicate_count
+        nonlocal previous_frame, duplicate_count, last_index
 
         frame = get_frame(t)
-        frame_index = int(t * get_frame.__self__.fps)
+
+        frame_index = last_index + 1
+        last_index = frame_index
 
         # If we are in a duplication window, return the previous frame
         if duplicate_count > 0:

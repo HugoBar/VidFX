@@ -15,12 +15,15 @@ def stop_motion(remove_every=2):
         function: A transform function suitable for clip.transform().
     """
     previous_frame = None
+    last_index = -1
 
     def apply(get_frame, t):
-        nonlocal previous_frame
+        nonlocal previous_frame, last_index
 
         frame = get_frame(t)
-        frame_index = int(t * get_frame.__self__.fps)
+
+        frame_index = last_index + 1
+        last_index = frame_index
 
         # Replace frame at every remove_every interval
         if frame_index % remove_every == 0:
