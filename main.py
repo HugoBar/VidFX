@@ -9,7 +9,7 @@ and to merge multiple videos with optional transitions.
 import os
 import typer
 from typing_extensions import Annotated
-from moviepy import VideoFileClip
+from moviepy import VideoFileClip, AudioFileClip
 import moviepy as mp
 from filters import apply_filters, validate_filters, FILTER_REGISTRY
 from effects import apply_effects, validate_effects, EFFECTS_REGISTRY
@@ -164,12 +164,12 @@ def merge(
             help="List of transitions to apply between videos in the format <name>@<clip_number>. Use --list-transitions to see available transitions."
         ),
     ] = [],
-    output: Annotated[
+    song_path: Annotated[
         str,
         typer.Option(
-            help="Base filename for the output video. Will be saved as <output>.mp4 in the current directory."
+            help="Path to an audio file to use as background music for the merged video."
         ),
-    ] = "merged",
+    ] = "",
     list_transitions: Annotated[
         bool,
         typer.Option(
@@ -177,6 +177,12 @@ def merge(
             is_flag=True,
         ),
     ] = False,
+    output: Annotated[
+        str,
+        typer.Option(
+            help="Base filename for the output video. Will be saved as <output>.mp4 in the current directory."
+        ),
+    ] = "merged",
 ):
     """
     Merge multiple video files into a single video, optionally applying transitions
@@ -188,9 +194,8 @@ def merge(
                                                specify the clip it starts at using the format <transition_name>@<clip_number>,
                                                where <clip_number> is **1-based** and indicates the clip from which the
                                                transition begins. Default is no transitions.
-        output (str, optional):                Base filename for the output video (default: "video"). Saves as .mp4.
         list_transitions (bool, optional):     If set, lists all available transitions and exits.
-
+        output (str, optional):                Base filename for the output video (default: "video"). Saves as .mp4.
 
     Example usage:
         python main.py merge video1.mp4 video2.mp4
@@ -243,7 +248,20 @@ def merge(
         logger.info("No transitions selected, continuing...")
 
     # --- CONCATENATE CLIPS ---
-    concat_clip = mp.concatenate_videoclips(clips)
+    concat_clip = mp.concatenate_videoclips(clips, method="compose")
+
+    # --- ADD BACKGROUND MUSIC ---
+    # TODO: make subclipping times configurable
+    if song_path:
+        logger.info(f"Adding background music from {song_path}...")
+
+        audio = (
+            AudioFileClip(song_path).subclipped(5).with_duration(concat_clip.duration)
+        )
+
+        concat_clip = concat_clip.with_audio(audio)
+    else:
+        logger.info("No background music specified, continuing...")
 
     # --- SAVE VIDEO ---
     save_video(concat_clip, output)
@@ -258,10 +276,11 @@ def save_video(clip, output):
         output (str):         Base filename for the output video. Saves as .mp4.
     """
     # Save the video using H.264 codec, no audio, medium preset, 4 threads
+    # TODO: make audio configurable
     clip.write_videofile(
         f"{output}.mp4",
         codec="libx264",
-        audio=False,
+        audio_codec="aac",
         preset="medium",
         threads=4,
     )

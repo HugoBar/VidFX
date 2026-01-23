@@ -206,5 +206,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Generated videos
+# Media files
+*.mp3
 *.mp4
+*.mov
+*.avi
