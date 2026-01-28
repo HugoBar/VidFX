@@ -3,6 +3,7 @@ from .greyscale import greyscale
 from .high_contrast import high_contrast
 from .purpleish import purpleish
 from .hue import hue
+from .pink_future import pink_future
 
 # Registry of available filters by name
 # Allows dynamic lookup of filters for validation and application
@@ -12,6 +13,7 @@ FILTER_REGISTRY = {
     "high_contrast": high_contrast,
     "purpleish": purpleish,
     "hue": hue,
+    "pink_future": pink_future,
 }
 
 
