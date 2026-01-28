@@ -58,18 +58,22 @@ Apply filters and effects to a single video.
 ---
 
 ### 2. Merge Videos
-Combine multiple clips with optional transitions.
+Combine multiple clips with optional transitions and background music.
 
     python3 main.py merge <video1> <video2> ... [options]
 
 **Options:**
 - `--transitions` – List of transitions in the format `<transition_name>@<clip_number>`  
 - `--list-transitions` – List all available transitions  
+- `--song-path` – Path to an audio file to use as background music  
 - `--output` – Output filename (default: `merged.mp4`)
+
+**Note:**  
+Users are responsible for ensuring that any audio files used are legally permitted. This tool does not provide any license or rights to use copyrighted music.
 
 **Example:**
 
-    python3 main.py merge clip1.mp4 clip2.mp4 --output final_video
+    python3 main.py merge clip1.mp4 clip2.mp4 --transitions three_blocks@2 --song-path background.mp3 --output final_video
 
 ---
 

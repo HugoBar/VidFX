@@ -49,13 +49,19 @@ def merge(
                                                specify the clip it starts at using the format <transition_name>@<clip_number>,
                                                where <clip_number> is **1-based** and indicates the clip from which the
                                                transition begins. Default is no transitions.
+        song_path (str, optional):             Path to an audio file to use as background music for the merged video. Default is empty (no audio).
         list_transitions (bool, optional):     If set, lists all available transitions and exits.
         output (str, optional):                Base filename for the output video (default: "video"). Saves as .mp4.
+
+    Note:
+        Users are responsible for ensuring that any audio files used are legally permitted.
+        This tool does not provide any license or rights to use copyrighted music.
 
     Example usage:
         python main.py merge video1.mp4 video2.mp4
         python main.py merge clip1.mp4 clip2.mp4 clip3.mp4 --output final_video
         python main.py merge clip1.mp4 clip2.mp4 --transitions crossfade@2 --output final_video
+        python main.py merge clip1.mp4 clip2.mp4 --song-path background.mp3 --output final_with_music
     """
     # List available transitions and exit if requested
     if list_transitions:
