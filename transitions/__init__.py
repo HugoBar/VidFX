@@ -1,8 +1,10 @@
 from .three_blocks import ThreeBlocks
+from .blink import Blink
 
 # Dictionary mapping transition names to their classes
 TRANSITION_REGISTRY = {
     "three_blocks": ThreeBlocks,
+    "blink": Blink,
 }
 
 
